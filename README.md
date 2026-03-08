@@ -1,50 +1,220 @@
-# Welcome to your Expo app 👋
+# Price Checker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern, clean React Native mobile application for comparing product prices and finding the best deals. Built with Expo and TypeScript.
 
-## Get started
+![Price Checker Banner](https://via.placeholder.com/800x400/2563EB/FFFFFF?text=Price+Checker)
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+### Core Features
+- ✅ **Compare Multiple Products** - Compare up to 10 products at once
+- ✅ **Smart Price Calculation** - Calculates price per unit (g, ml, or piece)
+- ✅ **Unit Conversion** - Automatic conversion between weight and volume units
+- ✅ **Promotion Support** - Calculate with various promotions:
+  - Percentage Discount
+  - Fixed Amount Discount
+  - Buy X Get Y Free
+  - Bundle Pricing
 
-2. Start the app
+### Advanced Features
+- 📊 **Simple & Advance Modes** - Toggle between basic and advanced interfaces
+- 📝 **Product Notes** - Add notes to each product
+- 🧮 **Built-in Calculator** - Calculate pack totals (e.g., 6 bottles × 350ml)
+- 📱 **Quantity Picker** - Elegant modal for selecting quantities 1-10
+- 💾 **History** - Save and review past comparisons
+- 🌏 **Bilingual** - Full Thai and English support
+- 💰 **Multiple Currencies** - Support for ฿, $, €, ¥
 
-   ```bash
-   npx expo start
-   ```
+### Unit Support
+| Category | Units |
+|----------|-------|
+| **Weight** | mg, g, kg, oz, lb |
+| **Volume** | ml, cl, L, fl oz, gal |
+| **Quantity** | pcs, pack, box, set |
 
-In the output, you'll find options to open the app in a
+## Screenshots
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+| Home Screen | Result Screen | History |
+|-------------|---------------|---------|
+| ![Home](https://via.placeholder.com/200x400/F8FAFC/2563EB?text=Home) | ![Result](https://via.placeholder.com/200x400/F8FAFC/22C55E?text=Result) | ![History](https://via.placeholder.com/200x400/F8FAFC/475569?text=History) |
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Tech Stack
 
-## Get a fresh project
+- **Framework:** React Native 0.81.5 with Expo SDK ~54.0.33
+- **Language:** TypeScript 5.9.2
+- **Navigation:** React Navigation 7.x (Native Stack + Bottom Tabs)
+- **State Management:** React Context API
+- **Storage:** AsyncStorage (local storage)
+- **Animation:** React Native Reanimated 4.x
+- **Icons:** Ionicons (@expo/vector-icons)
+- **Fonts:** System fonts (optimized for fast loading)
 
-When you're ready, run:
+## Installation
 
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Expo CLI (`npm install -g expo-cli`)
+- Android Studio (for Android emulator) or Xcode (for iOS simulator)
+
+### Setup
+
+1. **Clone the repository**
 ```bash
-npm run reset-project
+git clone <repository-url>
+cd price-checker
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. **Install dependencies**
+```bash
+npm install
+```
 
-## Learn more
+3. **Start the development server**
+```bash
+npm start
+# or
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. **Run on device/emulator**
+- Press `a` for Android emulator
+- Press `i` for iOS simulator (macOS only)
+- Press `w` for web browser
+- Scan QR code with Expo Go app on physical device
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Build Commands
 
-## Join the community
+```bash
+# Development
+npm start              # Start Metro bundler
+npm run android        # Run on Android
+npm run ios            # Run on iOS
+npm run web            # Run on web
 
-Join our community of developers creating universal apps.
+# Production Build
+npx expo build:android    # Build Android APK/AAB
+npx expo build:ios        # Build iOS IPA (requires Apple Developer account)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Linting
+npm run lint           # Run ESLint
+
+# Reset
+npm run reset-project  # Reset Expo project
+```
+
+## Project Structure
+
+```
+price-checker/
+├── App.tsx                    # App entry point
+├── src/
+│   ├── components/            # Reusable UI components
+│   │   ├── ProductCard.tsx    # Product input form
+│   │   ├── QuantityPicker.tsx # Quantity selector modal
+│   │   ├── UnitPicker.tsx     # Unit selection modal
+│   │   ├── PromotionModal.tsx # Promotion type selector
+│   │   ├── CalculatorModal.tsx# Pack calculator
+│   │   ├── NoteModal.tsx      # Add notes modal
+│   │   └── ...
+│   ├── screens/               # Screen components
+│   │   ├── HomeScreen.tsx     # Main comparison screen
+│   │   ├── ResultScreen.tsx   # Results display
+│   │   ├── HistoryScreen.tsx  # Comparison history
+│   │   ├── SettingsScreen.tsx # App settings
+│   │   └── ...
+│   ├── navigation/            # Navigation setup
+│   ├── hooks/                 # Custom React hooks
+│   ├── constants/             # Theme, translations, units
+│   ├── types/                 # TypeScript interfaces
+│   └── utils/                 # Utility functions
+├── assets/                    # Fonts, images, icons
+└── ...
+```
+
+## Usage Guide
+
+### Basic Comparison
+1. Open the app
+2. Enter product name (optional)
+3. Enter price
+4. Enter quantity and select unit
+5. Choose promotion type (if any)
+6. Tap "Compare Best Deal"
+
+### Using Calculator
+- Tap the calculator icon next to quantity
+- Enter pack size and amount per item
+- Tap "Apply" to use calculated total
+
+### Adding Notes
+- Tap "Add Note" on any product card
+- Enter your note
+- Notes appear in history and results
+
+### Viewing History
+- Tap "History" tab at bottom
+- View past comparisons
+- Tap to see details
+- Swipe left or tap trash to delete
+
+### Settings
+- Tap "Settings" tab
+- Toggle between Thai/English
+- Switch Simple/Advance mode
+- Change currency
+- View and clear cache
+
+## Supported Languages
+
+| Language | Code | Status |
+|----------|------|--------|
+| Thai     | th   | ✅ Complete |
+| English  | en   | ✅ Complete |
+
+## Design
+
+The app follows a clean, minimal design inspired by:
+- **Notion** - Clean typography and spacing
+- **Apple Calculator** - Simple, focused interface
+- **Google Keep** - Card-based layout
+
+### Color Palette
+- **Primary:** `#2563EB` (Blue)
+- **Background:** `#F8FAFC` (Light Gray)
+- **Card:** `#FFFFFF` (White)
+- **Text:** `#0F172A` (Dark Slate)
+- **Accent:** `#22C55E` (Green for savings)
+
+## Troubleshooting
+
+### App shows loading spinner forever
+- Clear Metro cache: `npx expo start --clear`
+- Restart the app
+
+### AsyncStorage errors
+The app has automatic fallback to memory storage if AsyncStorage fails.
+
+### Fonts not loading
+The app uses system fonts by default for fast loading. Custom fonts (Noto Sans) are included in assets/fonts/ as fallback.
+
+### Modal shows bottom navigation
+All modals are now full-screen with `statusBarTranslucent` to prevent this issue.
+
+## License
+
+MIT License
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Acknowledgments
+
+- Built with [Expo](https://expo.dev/)
+- Icons by [Ionicons](https://ionic.io/ionicons)
+- Fonts: Noto Sans & Noto Sans Thai by Google
+
+---
+
+Made with ❤️ for smart shoppers
