@@ -6,6 +6,7 @@ import {
   deleteHistoryItem,
   clearHistory,
   updateHistoryName,
+  toggleSavedHistory,
   getSettings,
   saveSettings,
   getCacheSize,
@@ -52,25 +53,34 @@ export function useHistory() {
     ));
   }, []);
 
-  return { history, loading, addHistory, deleteItem, clearAll, updateName, refresh: loadHistory };
+  const toggleSaved = useCallback(async (id: string) => {
+    const newState = await toggleSavedHistory(id);
+    setHistory(prev => prev.map(item => 
+      item.id === id ? { ...item, isSaved: newState } : item
+    ));
+    return newState;
+  }, []);
+
+  return { history, loading, addHistory, deleteItem, clearAll, updateName, toggleSaved, refresh: loadHistory };
 }
 
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
+    setLoading(true);
     try {
       const data = await getSettings();
       setSettings(data);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const updateSettings = useCallback(async (newSettings: Partial<AppSettings>) => {
     await saveSettings(newSettings);

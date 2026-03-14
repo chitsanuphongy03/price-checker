@@ -16,6 +16,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { BorderRadius, Colors, Shadows, Spacing } from "../constants/theme";
 import { useLanguage } from "../hooks/useLanguage";
+import { useSettings } from "../hooks/useStorage";
 import { Promotion, PromotionType } from "../types/promotion";
 
 interface PromotionSelectorProps {
@@ -30,6 +31,8 @@ export function PromotionSelector({
   onChange,
 }: PromotionSelectorProps) {
   const { t } = useLanguage();
+  const { settings } = useSettings();
+  const currencySymbol = settings?.currency || '฿';
   const [modalVisible, setModalVisible] = useState(false);
   const scaleValue = useSharedValue(1);
 
@@ -80,7 +83,7 @@ export function PromotionSelector({
     {
       type: PromotionType.FIXED_DISCOUNT,
       label: t("fixedDiscount"),
-      icon: "$",
+      icon: currencySymbol,
     },
     { type: PromotionType.BUY_X_GET_Y, label: t("buyXGetY"), icon: "🎁" },
     { type: PromotionType.BUNDLE_PRICE, label: t("bundlePrice"), icon: "📦" },
@@ -127,7 +130,7 @@ export function PromotionSelector({
               {t("discountAmount")}
             </Text>
             <View style={styles.inlineInputContainer}>
-              <Text style={styles.inlineInputPrefix}>$</Text>
+              <Text style={styles.inlineInputPrefix}>{currencySymbol}</Text>
               <TextInput
                 style={styles.inlineInput}
                 value={promotion.value.toString()}
@@ -205,7 +208,7 @@ export function PromotionSelector({
             <View style={[styles.promotionInputContainer, { flex: 1 }]}>
               <Text style={styles.promotionInputLabel}>{t("forPrice")}</Text>
               <View style={styles.inlineInputContainer}>
-                <Text style={styles.inlineInputPrefix}>$</Text>
+                <Text style={styles.inlineInputPrefix}>{currencySymbol}</Text>
                 <TextInput
                   style={styles.inlineInput}
                   value={promotion.value.toString()}

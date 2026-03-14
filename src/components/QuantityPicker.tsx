@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Modal, 
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
+import {
+  Modal,
+  StyleSheet,
+  Text,
   TextInput,
-  Dimensions,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, BorderRadius, Shadows, getFont } from '../constants/theme';
-import { useLanguage } from '../hooks/useLanguage';
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  BorderRadius,
+  Colors,
+  Shadows,
+  Spacing,
+  getFont,
+} from "../constants/theme";
+import { useLanguage } from "../hooks/useLanguage";
 
 interface QuantityPickerProps {
   value: number;
@@ -21,13 +26,18 @@ interface QuantityPickerProps {
 
 const PRESET_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-export function QuantityPicker({ value, onSelect, min = 0, max = 9999 }: QuantityPickerProps) {
+export function QuantityPicker({
+  value,
+  onSelect,
+  min = 0,
+  max = 9999,
+}: QuantityPickerProps) {
   const { t, isThai } = useLanguage();
   const [visible, setVisible] = useState(false);
   const [inputValue, setInputValue] = useState(value.toString());
 
   useEffect(() => {
-    setInputValue(value === 0 ? '' : value.toString());
+    setInputValue(value === 0 ? "" : value.toString());
   }, [value, visible]);
 
   const handleSelect = (num: number) => {
@@ -66,17 +76,25 @@ export function QuantityPicker({ value, onSelect, min = 0, max = 9999 }: Quantit
   return (
     <>
       {/* Display Button */}
-      <TouchableOpacity style={styles.displayButton} onPress={() => setVisible(true)}>
-        <Text style={[styles.displayText, { fontFamily: getFont('medium', isThai) }]}>
-          {value === 0 ? '-' : value}
+      <TouchableOpacity
+        style={styles.displayButton}
+        onPress={() => setVisible(true)}
+      >
+        <Text
+          style={[
+            styles.displayText,
+            { fontFamily: getFont("medium", isThai) },
+          ]}
+        >
+          {value === 0 ? "-" : value}
         </Text>
         <Ionicons name="chevron-down" size={16} color={Colors.textMuted} />
       </TouchableOpacity>
 
       {/* Full Screen Modal */}
-      <Modal 
-        visible={visible} 
-        transparent 
+      <Modal
+        visible={visible}
+        transparent
         animationType="fade"
         statusBarTranslucent={true}
       >
@@ -84,8 +102,10 @@ export function QuantityPicker({ value, onSelect, min = 0, max = 9999 }: Quantit
           <View style={styles.modalContainer}>
             {/* Header */}
             <View style={styles.header}>
-              <Text style={[styles.title, { fontFamily: getFont('bold', isThai) }]}>
-                {t('quantity') || 'Quantity'}
+              <Text
+                style={[styles.title, { fontFamily: getFont("bold", isThai) }]}
+              >
+                {t("quantity") || "Quantity"}
               </Text>
               <TouchableOpacity onPress={() => setVisible(false)}>
                 <Ionicons name="close" size={24} color={Colors.text} />
@@ -97,9 +117,9 @@ export function QuantityPicker({ value, onSelect, min = 0, max = 9999 }: Quantit
               <TouchableOpacity style={styles.adjustButton} onPress={decrement}>
                 <Ionicons name="remove" size={24} color={Colors.primary} />
               </TouchableOpacity>
-              
+
               <TextInput
-                style={[styles.input, { fontFamily: getFont('bold', isThai) }]}
+                style={[styles.input, { fontFamily: getFont("bold", isThai) }]}
                 value={inputValue}
                 onChangeText={setInputValue}
                 keyboardType="number-pad"
@@ -109,26 +129,39 @@ export function QuantityPicker({ value, onSelect, min = 0, max = 9999 }: Quantit
                 placeholder="0"
                 placeholderTextColor={Colors.textMuted}
               />
-              
+
               <TouchableOpacity style={styles.adjustButton} onPress={increment}>
                 <Ionicons name="add" size={24} color={Colors.primary} />
               </TouchableOpacity>
             </View>
 
             {/* Apply Button */}
-            <TouchableOpacity 
-              style={[styles.applyButton, !inputValue && styles.applyButtonDisabled]}
+            <TouchableOpacity
+              style={[
+                styles.applyButton,
+                !inputValue && styles.applyButtonDisabled,
+              ]}
               onPress={handleInputSubmit}
               disabled={!inputValue}
             >
-              <Text style={[styles.applyText, { fontFamily: getFont('bold', isThai) }]}>
-                {t('apply') || 'Apply'}
+              <Text
+                style={[
+                  styles.applyText,
+                  { fontFamily: getFont("bold", isThai) },
+                ]}
+              >
+                {t("apply") || "Apply"}
               </Text>
             </TouchableOpacity>
 
             {/* Quick Select Title */}
-            <Text style={[styles.quickTitle, { fontFamily: getFont('medium', isThai) }]}>
-              {t('quickSelect') || 'Quick Select'}
+            <Text
+              style={[
+                styles.quickTitle,
+                { fontFamily: getFont("medium", isThai) },
+              ]}
+            >
+              {t("quickSelect") || "Quick Select"}
             </Text>
 
             {/* Grid - 2 rows x 5 columns */}
@@ -144,11 +177,13 @@ export function QuantityPicker({ value, onSelect, min = 0, max = 9999 }: Quantit
                       ]}
                       onPress={() => handleSelect(num)}
                     >
-                      <Text style={[
-                        styles.presetText,
-                        { fontFamily: getFont('medium', isThai) },
-                        value === num && styles.presetTextActive,
-                      ]}>
+                      <Text
+                        style={[
+                          styles.presetText,
+                          { fontFamily: getFont("medium", isThai) },
+                          value === num && styles.presetTextActive,
+                        ]}
+                      >
                         {num}
                       </Text>
                     </TouchableOpacity>
@@ -166,15 +201,16 @@ export function QuantityPicker({ value, onSelect, min = 0, max = 9999 }: Quantit
 const styles = StyleSheet.create({
   displayButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: BorderRadius.md,
     backgroundColor: Colors.background,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
+    height: 40,
   },
   displayText: {
     fontSize: 16,
@@ -182,23 +218,23 @@ const styles = StyleSheet.create({
   },
   fullScreenOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   modalContainer: {
     backgroundColor: Colors.card,
     borderRadius: BorderRadius.xl,
-    width: '100%',
+    width: "100%",
     maxWidth: 300,
     padding: Spacing.lg,
     ...Shadows.xl,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: Spacing.lg,
   },
   title: {
@@ -206,9 +242,9 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   inputSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: Spacing.lg,
     gap: Spacing.lg,
   },
@@ -216,9 +252,9 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primary + '10',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: Colors.primary + "10",
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     width: 100,
@@ -229,12 +265,16 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: Colors.text,
     backgroundColor: Colors.background,
+    textAlign: "center",
+    textAlignVertical: "center",
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   applyButton: {
     backgroundColor: Colors.primary,
     borderRadius: BorderRadius.xl,
     paddingVertical: Spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: Spacing.lg,
   },
   applyButtonDisabled: {
@@ -250,12 +290,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   gridContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: Spacing.sm,
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: Spacing.sm,
   },
   presetButton: {
@@ -263,8 +303,8 @@ const styles = StyleSheet.create({
     height: 46,
     backgroundColor: Colors.background,
     borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: Colors.border,
   },

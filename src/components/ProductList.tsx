@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, BorderRadius, Shadows, getFont } from '../constants/theme';
+import { Colors, Spacing, BorderRadius, getFont } from '../constants/theme';
 import { Product, PromotionType } from '../types/promotion';
 import { UnitType } from '../constants/units';
 import { ProductCard } from './ProductCard';
 import { PromotionModal } from './PromotionModal';
-import { CalculatorModal } from './CalculatorModal';
 import { useLanguage } from '../hooks/useLanguage';
 
 interface ProductListProps {
@@ -16,8 +15,6 @@ interface ProductListProps {
   setActiveProductId: (id: string | null) => void;
   promoModalVisible: boolean;
   setPromoModalVisible: (visible: boolean) => void;
-  calcModalVisible: boolean;
-  setCalcModalVisible: (visible: boolean) => void;
 }
 
 const MAX_PRODUCTS = 10;
@@ -30,8 +27,6 @@ export function ProductList({
   setActiveProductId,
   promoModalVisible,
   setPromoModalVisible,
-  calcModalVisible,
-  setCalcModalVisible,
 }: ProductListProps) {
   const { t, isThai } = useLanguage();
 
@@ -75,17 +70,6 @@ export function ProductList({
     setActiveProductId(null);
   };
 
-  const handleApplyCalculator = (result: number) => {
-    if (!activeProductId) return;
-    
-    const product = products.find(p => p.id === activeProductId);
-    if (product) {
-      updateProduct(activeProductId, { ...product, quantity: result });
-    }
-    setCalcModalVisible(false);
-    setActiveProductId(null);
-  };
-
   const activeProduct = activeProductId ? products.find(p => p.id === activeProductId) : null;
 
   return (
@@ -100,10 +84,6 @@ export function ProductList({
             onOpenPromotion={() => {
               setActiveProductId(product.id);
               setPromoModalVisible(true);
-            }}
-            onOpenCalculator={() => {
-              setActiveProductId(product.id);
-              setCalcModalVisible(true);
             }}
             canDelete={products.length > MIN_PRODUCTS}
             onDelete={() => removeProduct(product.id)}
@@ -131,15 +111,6 @@ export function ProductList({
         onSelect={handleSelectPromotion}
         currentPromotion={activeProduct?.promotion || { type: PromotionType.NONE, value: 0 }}
       />
-
-      <CalculatorModal
-        visible={calcModalVisible}
-        onClose={() => {
-          setCalcModalVisible(false);
-          setActiveProductId(null);
-        }}
-        onApply={handleApplyCalculator}
-      />
     </>
   );
 }
@@ -155,7 +126,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     borderWidth: 2,
     borderColor: Colors.primary + '30',
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
   },
   addButtonText: {
     fontSize: 16,

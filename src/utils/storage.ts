@@ -1,28 +1,35 @@
+import { HistoryItem } from "../types/promotion";
+
 // In-memory storage fallback for when AsyncStorage is not available
 const memoryStorage: Record<string, string> = {};
 
-// Check if we're in a native environment
-const isNative = typeof navigator !== 'undefined' && navigator.product !== 'ReactNative';
+// AsyncStorage will be imported dynamically when needed
+let AsyncStorage: any = null;
 
-// Try to import AsyncStorage, fallback to memory if not available
-let AsyncStorage: any;
-try {
-  AsyncStorage = require('@react-native-async-storage/async-storage').default;
-} catch {
-  AsyncStorage = null;
-}
+const getAsyncStorage = async (): Promise<any> => {
+  if (AsyncStorage === null) {
+    try {
+      const module = await import("@react-native-async-storage/async-storage");
+      AsyncStorage = module.default;
+    } catch {
+      AsyncStorage = undefined;
+    }
+  }
+  return AsyncStorage;
+};
 
 const STORAGE_KEYS = {
-  HISTORY: '@price_checker_history',
-  SETTINGS: '@price_checker_settings',
+  HISTORY: "@price_checker_history",
+  SETTINGS: "@price_checker_settings",
 };
 
 // Storage wrapper that works with or without AsyncStorage
 const storage = {
   async getItem(key: string): Promise<string | null> {
     try {
-      if (AsyncStorage) {
-        return await AsyncStorage.getItem(key);
+      const AS = await getAsyncStorage();
+      if (AS) {
+        return await AS.getItem(key);
       }
     } catch {
       // Fallback to memory
@@ -32,8 +39,9 @@ const storage = {
 
   async setItem(key: string, value: string): Promise<void> {
     try {
-      if (AsyncStorage) {
-        await AsyncStorage.setItem(key, value);
+      const AS = await getAsyncStorage();
+      if (AS) {
+        await AS.setItem(key, value);
         return;
       }
     } catch {
@@ -44,8 +52,9 @@ const storage = {
 
   async removeItem(key: string): Promise<void> {
     try {
-      if (AsyncStorage) {
-        await AsyncStorage.removeItem(key);
+      const AS = await getAsyncStorage();
+      if (AS) {
+        await AS.removeItem(key);
         return;
       }
     } catch {
@@ -56,8 +65,9 @@ const storage = {
 
   async getAllKeys(): Promise<string[]> {
     try {
-      if (AsyncStorage) {
-        return await AsyncStorage.getAllKeys();
+      const AS = await getAsyncStorage();
+      if (AS) {
+        return await AS.getAllKeys();
       }
     } catch {
       // Fallback to memory
@@ -66,8 +76,6 @@ const storage = {
   },
 };
 
-import { HistoryItem } from '../types/promotion';
-
 // History Operations
 export const saveHistory = async (item: HistoryItem): Promise<void> => {
   try {
@@ -75,7 +83,7 @@ export const saveHistory = async (item: HistoryItem): Promise<void> => {
     const updated = [item, ...existing];
     await storage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
   } catch (error) {
-    console.error('Error saving history:', error);
+    console.error("Error saving history:", error);
   }
 };
 
@@ -84,7 +92,7 @@ export const getHistory = async (): Promise<HistoryItem[]> => {
     const data = await storage.getItem(STORAGE_KEYS.HISTORY);
     return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error('Error getting history:', error);
+    console.error("Error getting history:", error);
     return [];
   }
 };
@@ -92,10 +100,10 @@ export const getHistory = async (): Promise<HistoryItem[]> => {
 export const deleteHistoryItem = async (id: string): Promise<void> => {
   try {
     const existing = await getHistory();
-    const updated = existing.filter(item => item.id !== id);
+    const updated = existing.filter((item) => item.id !== id);
     await storage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
   } catch (error) {
-    console.error('Error deleting history:', error);
+    console.error("Error deleting history:", error);
   }
 };
 
@@ -103,54 +111,82 @@ export const clearHistory = async (): Promise<void> => {
   try {
     await storage.removeItem(STORAGE_KEYS.HISTORY);
   } catch (error) {
-    console.error('Error clearing history:', error);
+    console.error("Error clearing history:", error);
   }
 };
 
-export const updateHistoryName = async (id: string, name: string): Promise<void> => {
+export const updateHistoryName = async (
+  id: string,
+  name: string,
+): Promise<void> => {
   try {
     const existing = await getHistory();
-    const updated = existing.map(item => 
-      item.id === id ? { ...item, name } : item
+    const updated = existing.map((item) =>
+      item.id === id ? { ...item, name } : item,
     );
     await storage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
   } catch (error) {
-    console.error('Error updating history:', error);
+    console.error("Error updating history:", error);
+  }
+};
+
+export const toggleSavedHistory = async (
+  id: string,
+): Promise<boolean> => {
+  try {
+    const existing = await getHistory();
+    let newSavedState = false;
+    const updated = existing.map((item) => {
+      if (item.id === id) {
+        newSavedState = !item.isSaved;
+        return { ...item, isSaved: newSavedState };
+      }
+      return item;
+    });
+    await storage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated));
+    return newSavedState;
+  } catch (error) {
+    console.error("Error toggling saved:", error);
+    return false;
   }
 };
 
 // Settings Operations
 export interface AppSettings {
-  language: 'th' | 'en';
-  mode: 'simple' | 'advance';
+  language: "th" | "en";
+  mode: "simple" | "advance";
   defaultUnit: string;
-  currency: '$' | '฿' | '€' | '¥';
+  currency: "$" | "฿" | "€" | "¥";
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-  language: 'th',
-  mode: 'simple',
-  defaultUnit: 'pcs',
-  currency: '฿',
+  language: "th",
+  mode: "simple",
+  defaultUnit: "pcs",
+  currency: "฿",
 };
 
 export const getSettings = async (): Promise<AppSettings> => {
   try {
     const data = await storage.getItem(STORAGE_KEYS.SETTINGS);
-    return data ? { ...DEFAULT_SETTINGS, ...JSON.parse(data) } : DEFAULT_SETTINGS;
+    return data
+      ? { ...DEFAULT_SETTINGS, ...JSON.parse(data) }
+      : DEFAULT_SETTINGS;
   } catch (error) {
-    console.error('Error getting settings:', error);
+    console.error("Error getting settings:", error);
     return DEFAULT_SETTINGS;
   }
 };
 
-export const saveSettings = async (settings: Partial<AppSettings>): Promise<void> => {
+export const saveSettings = async (
+  settings: Partial<AppSettings>,
+): Promise<void> => {
   try {
     const existing = await getSettings();
     const updated = { ...existing, ...settings };
     await storage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
   } catch (error) {
-    console.error('Error saving settings:', error);
+    console.error("Error saving settings:", error);
   }
 };
 
@@ -159,14 +195,14 @@ export const getCacheSize = async (): Promise<string> => {
   try {
     const keys = await storage.getAllKeys();
     let size = 0;
-    
+
     for (const key of keys) {
       const value = await storage.getItem(key);
       if (value) {
         size += value.length * 2;
       }
     }
-    
+
     if (size > 1024 * 1024) {
       return `${(size / (1024 * 1024)).toFixed(2)} MB`;
     } else if (size > 1024) {
@@ -174,8 +210,8 @@ export const getCacheSize = async (): Promise<string> => {
     }
     return `${size} B`;
   } catch (error) {
-    console.error('Error calculating cache size:', error);
-    return '0 B';
+    console.error("Error calculating cache size:", error);
+    return "0 B";
   }
 };
 
@@ -186,8 +222,9 @@ export const clearCache = async (): Promise<void> => {
       await storage.removeItem(key);
     }
   } catch (error) {
-    console.error('Error clearing cache:', error);
+    console.error("Error clearing cache:", error);
   }
 };
 
 export { STORAGE_KEYS };
+

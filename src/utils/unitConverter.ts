@@ -1,6 +1,11 @@
-import { UnitType, convertUnit, toBaseUnit, getPricePerBaseUnit } from '../constants/units';
+import {
+  UnitType,
+  convertUnit,
+  getPricePerBaseUnit,
+  toBaseUnit,
+} from "../constants/units";
 
-export { convertUnit, toBaseUnit, getPricePerBaseUnit };
+export { convertUnit, getPricePerBaseUnit, toBaseUnit };
 
 // Format converted value with appropriate precision
 export const formatConvertedValue = (value: number, unit: string): string => {
@@ -18,7 +23,7 @@ export const formatConvertedValue = (value: number, unit: string): string => {
 export const calculateEquivalent = (
   sourceQty: number,
   sourceUnit: UnitType,
-  targetUnit: UnitType
+  targetUnit: UnitType,
 ): number => {
   return convertUnit(sourceQty, sourceUnit, targetUnit);
 };
@@ -29,24 +34,26 @@ export interface ComparisonByUnit {
   originalQty: number;
   originalUnit: UnitType;
   baseQty: number;
-  baseUnit: 'g' | 'ml' | 'pcs';
+  baseUnit: "g" | "ml" | "pcs";
   pricePerBase: number;
 }
 
 export const compareByBaseUnit = (
-  products: Array<{ name: string; price: number; quantity: number; unit: UnitType }>
+  products: { name: string; price: number; quantity: number; unit: UnitType }[],
 ): ComparisonByUnit[] => {
-  return products.map(p => {
-    const base = toBaseUnit(p.quantity, p.unit);
-    const pricePerBase = p.price / base.value;
-    
-    return {
-      productName: p.name,
-      originalQty: p.quantity,
-      originalUnit: p.unit,
-      baseQty: base.value,
-      baseUnit: base.unit,
-      pricePerBase,
-    };
-  }).sort((a, b) => a.pricePerBase - b.pricePerBase);
+  return products
+    .map((p) => {
+      const base = toBaseUnit(p.quantity, p.unit);
+      const pricePerBase = p.price / base.value;
+
+      return {
+        productName: p.name,
+        originalQty: p.quantity,
+        originalUnit: p.unit,
+        baseQty: base.value,
+        baseUnit: base.unit,
+        pricePerBase,
+      };
+    })
+    .sort((a, b) => a.pricePerBase - b.pricePerBase);
 };

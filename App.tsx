@@ -18,19 +18,17 @@ function AppContent() {
     );
   }
 
-  return (
-    <SafeAreaProvider>
-      <LanguageProvider>
-        <AppNavigator />
-      </LanguageProvider>
-    </SafeAreaProvider>
-  );
+  return <AppNavigator />;
 }
 
 export default function App() {
   return (
     <GestureHandlerRootView style={styles.container}>
-      <AppContent />
+      <SafeAreaProvider>
+        <LanguageProvider>
+          <AppContent />
+        </LanguageProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

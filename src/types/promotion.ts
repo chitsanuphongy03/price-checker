@@ -1,11 +1,11 @@
-import { UnitType } from '../constants/units';
+import { UnitType } from "../constants/units";
 
 export enum PromotionType {
-  NONE = 'none',
-  PERCENTAGE_DISCOUNT = 'percentage_discount',
-  FIXED_DISCOUNT = 'fixed_discount',
-  BUY_X_GET_Y = 'buy_x_get_y',
-  BUNDLE_PRICE = 'bundle_price',
+  NONE = "none",
+  PERCENTAGE_DISCOUNT = "percentage_discount",
+  FIXED_DISCOUNT = "fixed_discount",
+  BUY_X_GET_Y = "buy_x_get_y",
+  BUNDLE_PRICE = "bundle_price",
 }
 
 export interface Promotion {
@@ -44,11 +44,11 @@ export interface ComparisonResult {
   loserResult: CalculationResult;
   savingsPercentage: number;
   isTie: boolean;
-  allResults: Array<{
+  allResults: {
     product: Product;
     result: CalculationResult;
     rank: number;
-  }>;
+  }[];
 }
 
 export interface HistoryItem {
@@ -58,7 +58,8 @@ export interface HistoryItem {
   products: Product[];
   winner: Product | null;
   savingsPercentage: number;
-  mode: 'simple' | 'advance';
+  mode: "simple" | "advance";
+  isSaved?: boolean;
 }
 
-export type AppMode = 'simple' | 'advance';
+export type AppMode = "simple" | "advance";

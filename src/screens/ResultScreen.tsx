@@ -1,111 +1,168 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, TextInput } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withDelay } from 'react-native-reanimated';
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
 
-import { Colors, Spacing, BorderRadius, Shadows, getFont } from '../constants/theme';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { formatPrice, formatPercentage } from '../utils/priceCalculator';
-import { useLanguage } from '../hooks/useLanguage';
-import { useHistory } from '../hooks/useStorage';
+import {
+  Platform,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Animated, {
+  FadeInUp,
+} from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-type ResultScreenRouteProp = RouteProp<RootStackParamList, 'Result'>;
+import {
+  BorderRadius,
+  Colors,
+  Shadows,
+  Spacing,
+  getFont,
+} from "../constants/theme";
+import { useLanguage } from "../hooks/useLanguage";
+import { useSettings } from "../hooks/useStorage";
+import { RootStackParamList } from "../navigation/AppNavigator";
+import { formatPercentage, formatPrice } from "../utils/priceCalculator";
+
+type ResultScreenRouteProp = RouteProp<RootStackParamList, "Result">;
 
 export function ResultScreen() {
   const navigation = useNavigation();
   const route = useRoute<ResultScreenRouteProp>();
   const { t, isThai } = useLanguage();
-  const { updateName } = useHistory();
+  const { settings } = useSettings();
+  const currency = settings?.currency || '฿';
   const { comparison, products } = route.params;
-
-  const [historyName, setHistoryName] = useState('');
-  const [isEditingName, setIsEditingName] = useState(false);
-
-  const headerOpacity = useSharedValue(0);
-  const cardScale = useSharedValue(0.9);
-  const cardOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 400 });
-    cardOpacity.value = withDelay(200, withTiming(1, { duration: 400 }));
-    cardScale.value = withDelay(200, withSpring(1, { damping: 15 }));
-  }, []);
-
-  const headerStyle = useAnimatedStyle(() => ({ opacity: headerOpacity.value }));
-  const cardStyle = useAnimatedStyle(() => ({
-    opacity: cardOpacity.value,
-    transform: [{ scale: cardScale.value }],
-  }));
 
   const handleShare = async () => {
     const winner = comparison.winner;
-    let message = '';
-    
+    let message = "";
+
     if (comparison.isTie) {
-      message = `${t('itsATie')}\n${formatPrice(comparison.winnerResult.pricePerUnit)} ${t('perUnit')}`;
+      message = `${t("itsATie")}\n${formatPrice(comparison.winnerResult.pricePerUnit, currency)} ${t("perUnit")}`;
     } else {
-      message = `${t('bestDeal')}: ${winner?.name}\n${t('youSave')} ${formatPercentage(comparison.savingsPercentage)}`;
+      message = `${t("bestDeal")}: ${winner?.name}\n${t("youSave")} ${formatPercentage(comparison.savingsPercentage)}`;
     }
-    
-    // Add all products
-    message += '\n\n' + comparison.allResults.map((r, idx) => 
-      `${idx + 1}. ${r.product.name}: ${formatPrice(r.result.pricePerUnit)}/${t('unit')}`
-    ).join('\n');
-    
-    await Share.share({ message, title: t('shareTitle') });
+
+    message +=
+      "\n\n" +
+      comparison.allResults
+        .map(
+          (r, idx) =>
+            `${idx + 1}. ${r.product.name}: ${formatPrice(r.result.pricePerUnit, currency)}/${t("unit")}`,
+        )
+        .join("\n");
+
+    await Share.share({ message, title: t("shareTitle") });
   };
 
   const getRankColor = (rank: number) => {
-    if (rank === 1) return Colors.accent;
-    if (rank === 2) return Colors.primary;
+    if (rank === 1) return Colors.success;
+    if (rank === 2) return Colors.warning;
     return Colors.textMuted;
   };
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return 'trophy';
-    if (rank === 2) return 'medal';
-    return 'ellipse';
+    if (rank === 1) return "trophy";
+    if (rank === 2) return "medal-outline";
+    return "ellipse";
   };
 
+  // Calculate savings
+  const winnerResult = comparison.allResults[0];
+  const loserResult = comparison.allResults[comparison.allResults.length - 1];
+  const savingsAmount = comparison.isTie ? 0 : (loserResult.result.pricePerUnit - winnerResult.result.pricePerUnit);
+  const savingsPercent = comparison.savingsPercentage;
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar style="dark" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Header */}
-        <Animated.View style={[styles.header, headerStyle]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <Ionicons name="arrow-back" size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { fontFamily: getFont('semiBold', isThai) }]}>
-            {t('result')}
+          <Text
+            style={[
+              styles.headerTitle,
+              { fontFamily: getFont("bold", isThai) },
+            ]}
+          >
+            {t("result")}
           </Text>
-          <View style={styles.placeholder} />
-        </Animated.View>
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+            <Ionicons name="share-outline" size={22} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
 
         {/* Winner Card */}
-        <Animated.View style={[styles.winnerCard, cardStyle]}>
-          <View style={styles.winnerBadge}>
-            <Ionicons name="trophy" size={16} color={Colors.accent} />
-            <Text style={[styles.winnerBadgeText, { fontFamily: getFont('bold', isThai) }]}>
-              {t('bestDeal') || 'BEST DEAL'}
+        <Animated.View entering={FadeInUp} style={styles.winnerCard}>
+          <View style={styles.winnerHeader}>
+            <Ionicons name="trophy" size={28} color={Colors.warning} />
+            <Text
+              style={[
+                styles.winnerTitle,
+                { fontFamily: getFont("bold", isThai) },
+              ]}
+            >
+              {t("bestDeal")}
             </Text>
           </View>
 
           {!comparison.isTie && comparison.winner && (
             <>
-              <Text style={[styles.winnerName, { fontFamily: getFont('bold', isThai) }]}>
+              <Text
+                style={[
+                  styles.winnerName,
+                  { fontFamily: getFont("bold", isThai) },
+                ]}
+              >
                 {comparison.winner.name}
               </Text>
-              <Text style={[styles.winnerPrice, { fontFamily: getFont('bold', isThai) }]}>
-                {formatPrice(comparison.winnerResult.pricePerUnit)}
-                <Text style={styles.perUnit}>/{t('unit')}</Text>
-              </Text>
-              <View style={styles.savingsBadge}>
-                <Text style={[styles.savingsText, { fontFamily: getFont('semiBold', isThai) }]}>
-                  {t('youSave')} {formatPercentage(comparison.savingsPercentage)}
+              
+              <View style={styles.winnerPriceBox}>
+                <Text style={styles.pricePrefix}>{currency}</Text>
+                <Text
+                  style={[
+                    styles.winnerPrice,
+                    { fontFamily: getFont("bold", isThai) },
+                  ]}
+                >
+                  {winnerResult.result.pricePerUnit.toFixed(2)}
+                </Text>
+                <Text style={styles.priceSuffix}>/{t("unit")}</Text>
+              </View>
+
+              <View style={styles.savingsBox}>
+                <View style={styles.savingsRow}>
+                  <Ionicons name="trending-down" size={18} color={Colors.success} />
+                  <Text
+                    style={[
+                      styles.savingsText,
+                      { fontFamily: getFont("semiBold", isThai) },
+                    ]}
+                  >
+                    {t("youSave")} {formatPercentage(savingsPercent)}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.savingsSubtext,
+                    { fontFamily: getFont("regular", isThai) },
+                  ]}
+                >
+                  ({currency}{savingsAmount.toFixed(2)} /{t("unit")})
                 </Text>
               </View>
             </>
@@ -113,92 +170,278 @@ export function ResultScreen() {
 
           {comparison.isTie && (
             <>
-              <Text style={[styles.winnerName, { fontFamily: getFont('bold', isThai) }]}>
-                {t('itsATie')}
+              <Text
+                style={[
+                  styles.tieText,
+                  { fontFamily: getFont("medium", isThai) },
+                ]}
+              >
+                {t("itsATie")}
               </Text>
-              <Text style={[styles.tiePrice, { fontFamily: getFont('bold', isThai) }]}>
-                {formatPrice(comparison.winnerResult.pricePerUnit)}
-                <Text style={styles.perUnit}>/{t('unit')}</Text>
-              </Text>
+              <View style={styles.winnerPriceBox}>
+                <Text style={styles.pricePrefix}>{currency}</Text>
+                <Text
+                  style={[
+                    styles.winnerPrice,
+                    { fontFamily: getFont("bold", isThai) },
+                  ]}
+                >
+                  {comparison.winnerResult.pricePerUnit.toFixed(2)}
+                </Text>
+                <Text style={styles.priceSuffix}>/{t("unit")}</Text>
+              </View>
+              <Text style={styles.tieSubtext}>{t("tieMessage")}</Text>
             </>
           )}
         </Animated.View>
 
-        {/* Rankings */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { fontFamily: getFont('bold', isThai) }]}>
-            {t('rankings') || 'Rankings'}
-          </Text>
-          
-          {comparison.allResults.map(({ product, result, rank }) => (
-            <View key={product.id} style={[styles.rankItem, rank === 1 && styles.rankItemWinner]}>
-              <View style={[styles.rankNumber, { backgroundColor: getRankColor(rank) + '20' }]}>
-                <Ionicons 
-                  name={getRankIcon(rank) as any} 
-                  size={rank <= 2 ? 16 : 8} 
-                  color={getRankColor(rank)} 
-                />
+        {/* Comparison Summary */}
+        {!comparison.isTie && (
+          <Animated.View entering={FadeInUp.delay(100)} style={styles.compareCard}>
+            <Text
+              style={[
+                styles.compareTitle,
+                { fontFamily: getFont("bold", isThai) },
+              ]}
+            >
+              {t("priceCompare") || "เปรียบเทียบราคา"}
+            </Text>
+            
+            <View style={styles.compareRow}>
+              <View style={styles.compareItem}>
+                <View style={[styles.rankBadge, { backgroundColor: Colors.success + '20' }]}>
+                  <Ionicons name="trophy" size={14} color={Colors.success} />
+                </View>
+                <Text
+                  style={[
+                    styles.compareName,
+                    { fontFamily: getFont("medium", isThai) },
+                  ]}
+                >
+                  {winnerResult.product.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.comparePrice,
+                    { fontFamily: getFont("bold", isThai), color: Colors.success },
+                  ]}
+                >
+                  {currency}{winnerResult.result.pricePerUnit.toFixed(2)}
+                </Text>
               </View>
+
+              <View style={styles.vsBadge}>
+                <Text style={[styles.vsText, { fontFamily: getFont("bold", isThai) }]}>VS</Text>
+              </View>
+
+              <View style={styles.compareItem}>
+                <View style={[styles.rankBadge, { backgroundColor: Colors.textMuted + '20' }]}>
+                  <Text style={[styles.rankNumber, { color: Colors.textMuted }]}>#2</Text>
+                </View>
+                <Text
+                  style={[
+                    styles.compareName,
+                    { fontFamily: getFont("medium", isThai) },
+                  ]}
+                >
+                  {loserResult.product.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.comparePrice,
+                    { fontFamily: getFont("bold", isThai), color: Colors.text },
+                  ]}
+                >
+                  {currency}{loserResult.result.pricePerUnit.toFixed(2)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.savingsCalc}>
+              <Text
+                style={[
+                  styles.savingsCalcText,
+                  { fontFamily: getFont("medium", isThai) },
+                ]}
+              >
+                {t("perUnitDiff") || "ต่างกัน"} {currency}{savingsAmount.toFixed(2)}/{t("unit")} ({formatPercentage(savingsPercent)})
+              </Text>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Rankings List */}
+        <Animated.View entering={FadeInUp.delay(200)} style={styles.section}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { fontFamily: getFont("bold", isThai) },
+            ]}
+          >
+            {t("rankings") || "อันดับ"}
+          </Text>
+
+          {comparison.allResults.map(({ product, result, rank }) => (
+            <View
+              key={product.id}
+              style={[
+                styles.rankItem,
+                rank === 1 && styles.rankItemWinner,
+              ]}
+            >
+              <View
+                style={[
+                  styles.rankBadge,
+                  { backgroundColor: getRankColor(rank) + "20" },
+                ]}
+              >
+                {rank <= 2 ? (
+                  <Ionicons
+                    name={getRankIcon(rank) as any}
+                    size={16}
+                    color={getRankColor(rank)}
+                  />
+                ) : (
+                  <Text style={[styles.rankNumber, { color: getRankColor(rank) }]}>
+                    {rank}
+                  </Text>
+                )}
+              </View>
+              
               <View style={styles.rankInfo}>
-                <Text style={[styles.rankName, { fontFamily: getFont('semiBold', isThai) }]}>
+                <Text
+                  style={[
+                    styles.rankName,
+                    { fontFamily: getFont("semiBold", isThai) },
+                  ]}
+                >
                   {product.name}
                 </Text>
-                <Text style={[styles.rankDetail, { fontFamily: getFont('regular', isThai) }]}>
-                  {formatPrice(product.price)} × {product.quantity} {product.unit}
+                <Text
+                  style={[
+                    styles.rankDetail,
+                    { fontFamily: getFont("regular", isThai) },
+                  ]}
+                >
+                  {formatPrice(product.price, currency)} × {product.quantity} {product.unit}
                 </Text>
               </View>
-              <View style={styles.rankPrice}>
-                <Text style={[styles.rankPriceValue, { fontFamily: getFont('bold', isThai), color: getRankColor(rank) }]}>
-                  {formatPrice(result.pricePerUnit)}
+              
+              <View style={styles.rankPriceBox}>
+                <Text
+                  style={[
+                    styles.rankPriceValue,
+                    {
+                      fontFamily: getFont("bold", isThai),
+                      color: getRankColor(rank),
+                    },
+                  ]}
+                >
+                  {currency}{result.pricePerUnit.toFixed(2)}
                 </Text>
-                <Text style={styles.rankPriceUnit}>/{t('unit')}</Text>
+                <Text style={styles.rankPriceUnit}>/{t("unit")}</Text>
               </View>
             </View>
           ))}
-        </View>
+        </Animated.View>
 
-        {/* Details */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { fontFamily: getFont('bold', isThai) }]}>
-            {t('comparisonDetails')}
+        {/* Product Details */}
+        <Animated.View entering={FadeInUp.delay(300)} style={styles.section}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { fontFamily: getFont("bold", isThai) },
+            ]}
+          >
+            {t("productDetails") || "รายละเอียดสินค้า"}
           </Text>
-          
+
           {products.map((product) => (
-            <View key={product.id} style={styles.detailItem}>
+            <View key={product.id} style={styles.detailCard}>
               <View style={styles.detailHeader}>
-                <Text style={[styles.detailName, { fontFamily: getFont('semiBold', isThai) }]}>
+                <Text
+                  style={[
+                    styles.detailName,
+                    { fontFamily: getFont("semiBold", isThai) },
+                  ]}
+                >
                   {product.name}
                 </Text>
                 {product.notes && (
-                  <View style={styles.noteIndicator}>
-                    <Ionicons name="document-text" size={14} color={Colors.primary} />
-                  </View>
+                  <Ionicons name="document-text" size={16} color={Colors.primary} />
                 )}
               </View>
-              <Text style={[styles.detailText, { fontFamily: getFont('regular', isThai) }]}>
-                {t('price')}: {formatPrice(product.price)} • {product.quantity} {product.unit}
-              </Text>
+              
+              <View style={styles.detailGrid}>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>{t("price")}</Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { fontFamily: getFont("bold", isThai) },
+                    ]}
+                  >
+                    {formatPrice(product.price, currency)}
+                  </Text>
+                </View>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>{t("quantity")}</Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { fontFamily: getFont("bold", isThai) },
+                    ]}
+                  >
+                    {product.quantity} {product.unit}
+                  </Text>
+                </View>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>{t("total")}</Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { fontFamily: getFont("bold", isThai) },
+                    ]}
+                  >
+                    {formatPrice(product.price * product.quantity, currency)}
+                  </Text>
+                </View>
+              </View>
+              
               {product.notes && (
-                <Text style={[styles.detailNote, { fontFamily: getFont('regular', isThai) }]}>
-                  {t('note')}: {product.notes}
-                </Text>
+                <View style={styles.noteBox}>
+                  <Ionicons name="create-outline" size={14} color={Colors.textMuted} />
+                  <Text
+                    style={[
+                      styles.noteText,
+                      { fontFamily: getFont("regular", isThai) },
+                    ]}
+                  >
+                    {product.notes}
+                  </Text>
+                </View>
               )}
             </View>
           ))}
-        </View>
+        </Animated.View>
+
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      {/* Bottom Buttons */}
-      <View style={styles.bottomButtons}>
-        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-          <Ionicons name="share-outline" size={18} color={Colors.text} />
-          <Text style={[styles.shareText, { fontFamily: getFont('semiBold', isThai) }]}>
-            {t('share')}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.newButton} onPress={() => navigation.goBack()}>
-          <Text style={[styles.newButtonText, { fontFamily: getFont('semiBold', isThai) }]}>
-            {t('newComparison')}
+      {/* Bottom Button */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity
+          style={styles.newButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="refresh" size={20} color={Colors.card} />
+          <Text
+            style={[
+              styles.newButtonText,
+              { fontFamily: getFont("bold", isThai) },
+            ]}
+          >
+            {t("newComparison")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -212,14 +455,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
+    padding: Spacing.lg,
     paddingBottom: 100,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: Spacing.lg,
   },
   backButton: {
@@ -227,62 +469,151 @@ const styles = StyleSheet.create({
     marginLeft: -Spacing.sm,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 20,
     color: Colors.text,
   },
-  placeholder: {
-    width: 40,
+  shareBtn: {
+    padding: Spacing.sm,
   },
   winnerCard: {
     backgroundColor: Colors.card,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
     ...Shadows.md,
     marginBottom: Spacing.lg,
+    borderWidth: 2,
+    borderColor: Colors.warning + "30",
   },
-  winnerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.accent + '15',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
+  winnerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: Spacing.md,
   },
-  winnerBadgeText: {
-    fontSize: 12,
-    color: Colors.accent,
-    marginLeft: Spacing.xs,
-    letterSpacing: 0.5,
+  winnerTitle: {
+    fontSize: 18,
+    color: Colors.text,
+    marginLeft: Spacing.sm,
   },
   winnerName: {
-    fontSize: 24,
+    fontSize: 22,
     color: Colors.text,
     marginBottom: Spacing.sm,
   },
+  winnerPriceBox: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  pricePrefix: {
+    fontSize: 24,
+    color: Colors.primary,
+    fontWeight: "600",
+  },
   winnerPrice: {
-    fontSize: 36,
+    fontSize: 48,
     color: Colors.primary,
   },
-  tiePrice: {
-    fontSize: 32,
-    color: Colors.primary,
-  },
-  perUnit: {
+  priceSuffix: {
     fontSize: 16,
     color: Colors.textSecondary,
+    marginLeft: Spacing.xs,
   },
-  savingsBadge: {
-    backgroundColor: Colors.accent + '15',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    marginTop: Spacing.md,
+  savingsBox: {
+    backgroundColor: Colors.success + "15",
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    alignItems: "center",
+  },
+  savingsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
   },
   savingsText: {
+    fontSize: 16,
+    color: Colors.success,
+  },
+  savingsSubtext: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  tieText: {
+    fontSize: 20,
+    color: Colors.text,
+    marginBottom: Spacing.sm,
+  },
+  tieSubtext: {
     fontSize: 14,
-    color: Colors.accent,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
+  },
+  compareCard: {
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    ...Shadows.md,
+    marginBottom: Spacing.lg,
+  },
+  compareTitle: {
+    fontSize: 16,
+    color: Colors.text,
+    marginBottom: Spacing.md,
+  },
+  compareRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  compareItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  rankBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+  },
+  rankNumber: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  compareName: {
+    fontSize: 14,
+    color: Colors.text,
+    marginBottom: Spacing.xs,
+  },
+  comparePrice: {
+    fontSize: 18,
+  },
+  vsBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.divider,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  vsText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  savingsCalc: {
+    backgroundColor: Colors.success + "10",
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    marginTop: Spacing.lg,
+    alignItems: "center",
+  },
+  savingsCalcText: {
+    fontSize: 14,
+    color: Colors.success,
   },
   section: {
     marginBottom: Spacing.lg,
@@ -293,8 +624,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   rankItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Colors.card,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
@@ -303,18 +634,11 @@ const styles = StyleSheet.create({
   },
   rankItemWinner: {
     borderWidth: 2,
-    borderColor: Colors.accent + '30',
-  },
-  rankNumber: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.md,
+    borderColor: Colors.success + "30",
   },
   rankInfo: {
     flex: 1,
+    marginLeft: Spacing.md,
   },
   rankName: {
     fontSize: 16,
@@ -325,8 +649,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textMuted,
   },
-  rankPrice: {
-    alignItems: 'flex-end',
+  rankPriceBox: {
+    alignItems: "flex-end",
   },
   rankPriceValue: {
     fontSize: 18,
@@ -335,7 +659,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textMuted,
   },
-  detailItem: {
+  detailCard: {
     backgroundColor: Colors.card,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
@@ -343,63 +667,72 @@ const styles = StyleSheet.create({
     ...Shadows.sm,
   },
   detailHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   detailName: {
-    fontSize: 15,
+    fontSize: 16,
     color: Colors.text,
+  },
+  detailGrid: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  detailItem: {
     flex: 1,
   },
-  noteIndicator: {
-    marginLeft: Spacing.sm,
-  },
-  detailText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  detailNote: {
+  detailLabel: {
     fontSize: 12,
     color: Colors.textMuted,
-    marginTop: Spacing.xs,
-    fontStyle: 'italic',
+    marginBottom: Spacing.xs,
   },
-  bottomButtons: {
-    position: 'absolute',
+  detailValue: {
+    fontSize: 16,
+    color: Colors.text,
+  },
+  noteBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    marginTop: Spacing.md,
+    gap: Spacing.xs,
+  },
+  noteText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  bottomSpacer: {
+    height: 80,
+  },
+  bottomBar: {
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
+    backgroundColor: Colors.card,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    backgroundColor: Colors.background,
+    paddingVertical: Spacing.md,
+    paddingBottom: Platform.OS === "ios" ? Spacing.xl : Spacing.md,
     borderTopWidth: 1,
     borderTopColor: Colors.divider,
-    gap: Spacing.md,
-  },
-  shareButton: {
-    flex: 1,
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.xl,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  shareText: {
-    fontSize: 16,
-    color: Colors.text,
-    marginLeft: Spacing.xs,
+    ...Shadows.lg,
   },
   newButton: {
-    flex: 2,
     backgroundColor: Colors.primary,
     borderRadius: BorderRadius.xl,
     paddingVertical: Spacing.md,
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
   },
   newButtonText: {
     fontSize: 16,

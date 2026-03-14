@@ -179,7 +179,12 @@ export function SettingsScreen() {
       </ScrollView>
 
       {/* Currency Modal */}
-      <Modal visible={currencyModalVisible} transparent animationType="slide">
+      <Modal 
+        visible={currencyModalVisible} 
+        transparent 
+        animationType="fade"
+        statusBarTranslucent={true}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>

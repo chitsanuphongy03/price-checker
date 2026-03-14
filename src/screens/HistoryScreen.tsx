@@ -1,70 +1,79 @@
-import React, { useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  FlatList, 
-  Alert, 
+import { Ionicons } from "@expo/vector-icons";
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
+import { useCallback, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
   TextInput,
-  Modal 
-} from 'react-native';
-import { useNavigation, useFocusEffect, NavigationProp } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Colors, Spacing, BorderRadius, Shadows, getFont } from '../constants/theme';
-import { HistoryItem } from '../types/promotion';
-import { useHistory } from '../hooks/useStorage';
-import { useLanguage } from '../hooks/useLanguage';
-import { formatPrice } from '../utils/priceCalculator';
+import {
+  BorderRadius,
+  Colors,
+  Shadows,
+  Spacing,
+  getFont,
+} from "../constants/theme";
+import { useLanguage } from "../hooks/useLanguage";
+import { useHistory } from "../hooks/useStorage";
+import { HistoryItem } from "../types/promotion";
+import { formatPrice } from "../utils/priceCalculator";
 
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from "../navigation/AppNavigator";
 
 export function HistoryScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { t, isThai } = useLanguage();
-  const { history, loading, deleteItem, clearAll, updateName, refresh } = useHistory();
-  
+  const { history, loading, deleteItem, clearAll, updateName, toggleSaved, refresh } =
+    useHistory();
+
   const [editingItem, setEditingItem] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [editName, setEditName] = useState("");
 
   // Refresh when screen is focused
   useFocusEffect(
     useCallback(() => {
       refresh();
-    }, [])
+    }, [refresh]),
   );
 
   const handleDelete = (id: string) => {
     Alert.alert(
-      t('delete') || 'Delete',
-      t('confirmDelete') || 'Are you sure?',
+      t("delete") || "Delete",
+      t("confirmDelete") || "Are you sure?",
       [
-        { text: t('cancel') || 'Cancel', style: 'cancel' },
-        { 
-          text: t('delete') || 'Delete', 
-          style: 'destructive',
-          onPress: () => deleteItem(id)
+        { text: t("cancel") || "Cancel", style: "cancel" },
+        {
+          text: t("delete") || "Delete",
+          style: "destructive",
+          onPress: () => deleteItem(id),
         },
-      ]
+      ],
     );
   };
 
   const handleClearAll = () => {
     Alert.alert(
-      t('clearAll') || 'Clear All',
-      t('confirmClearAll') || 'Delete all history?',
+      t("clearAll") || "Clear All",
+      t("confirmClearAll") || "Delete all history?",
       [
-        { text: t('cancel') || 'Cancel', style: 'cancel' },
-        { 
-          text: t('delete') || 'Delete', 
-          style: 'destructive',
-          onPress: () => clearAll()
+        { text: t("cancel") || "Cancel", style: "cancel" },
+        {
+          text: t("delete") || "Delete",
+          style: "destructive",
+          onPress: () => clearAll(),
         },
-      ]
+      ],
     );
   };
 
@@ -77,25 +86,30 @@ export function HistoryScreen() {
     if (editingItem && editName.trim()) {
       updateName(editingItem, editName.trim());
       setEditingItem(null);
-      setEditName('');
+      setEditName("");
     }
   };
 
   const cancelEdit = () => {
     setEditingItem(null);
-    setEditName('');
+    setEditName("");
   };
 
   const renderItem = ({ item }: { item: HistoryItem }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.historyItem}
-      onPress={() => navigation.navigate('HistoryDetail', { historyId: item.id })}
+      onPress={() =>
+        navigation.navigate("HistoryDetail", { historyId: item.id })
+      }
     >
       <View style={styles.itemContent}>
         {editingItem === item.id ? (
           <View style={styles.editContainer}>
             <TextInput
-              style={[styles.editInput, { fontFamily: getFont('regular', isThai) }]}
+              style={[
+                styles.editInput,
+                { fontFamily: getFont("regular", isThai) },
+              ]}
               value={editName}
               onChangeText={setEditName}
               autoFocus
@@ -113,55 +127,95 @@ export function HistoryScreen() {
         ) : (
           <>
             <View style={styles.itemHeader}>
-              <Text style={[styles.itemName, { fontFamily: getFont('semiBold', isThai) }]}>
+              <Text
+                style={[
+                  styles.itemName,
+                  { fontFamily: getFont("semiBold", isThai) },
+                ]}
+              >
                 {item.name}
               </Text>
-              <TouchableOpacity onPress={() => startEdit(item)} style={styles.editIcon}>
-                <Ionicons name="pencil" size={16} color={Colors.textMuted} />
+              <TouchableOpacity
+                onPress={() => startEdit(item)}
+                style={styles.editIcon}
+              >
+                <Ionicons name="pencil-outline" size={20} color={Colors.textMuted} />
               </TouchableOpacity>
             </View>
-            <Text style={[styles.itemDate, { fontFamily: getFont('regular', isThai) }]}>
+            <Text
+              style={[
+                styles.itemDate,
+                { fontFamily: getFont("regular", isThai) },
+              ]}
+            >
               {new Date(item.timestamp).toLocaleDateString()}
             </Text>
             {item.winner && (
               <View style={styles.winnerRow}>
                 <Ionicons name="trophy" size={12} color={Colors.accent} />
-                <Text style={[styles.winnerText, { fontFamily: getFont('medium', isThai) }]}>
+                <Text
+                  style={[
+                    styles.winnerText,
+                    { fontFamily: getFont("medium", isThai) },
+                  ]}
+                >
                   {item.winner.name}
                 </Text>
-                <Text style={[styles.savingsText, { fontFamily: getFont('regular', isThai) }]}>
-                  {t('saved')} {formatPrice(item.winner.price)}
+                <Text
+                  style={[
+                    styles.savingsText,
+                    { fontFamily: getFont("regular", isThai) },
+                  ]}
+                >
+                  {t("saved")} {formatPrice(item.winner.price)}
                 </Text>
               </View>
             )}
           </>
         )}
       </View>
-      
+
       {editingItem !== item.id && (
-        <TouchableOpacity 
-          style={styles.deleteButton}
-          onPress={() => handleDelete(item.id)}
-        >
-          <Ionicons name="trash-outline" size={20} color={Colors.error} />
-        </TouchableOpacity>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => toggleSaved(item.id)}
+          >
+            <Ionicons 
+              name={item.isSaved ? "heart" : "heart-outline"} 
+              size={20} 
+              color={item.isSaved ? Colors.error : Colors.textMuted} 
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleDelete(item.id)}
+          >
+            <Ionicons name="trash-outline" size={20} color={Colors.error} />
+          </TouchableOpacity>
+        </View>
       )}
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar style="dark" />
-      
+
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { fontFamily: getFont('bold', isThai) }]}>
-          {t('history')}
+        <Text style={[styles.title, { fontFamily: getFont("bold", isThai) }]}>
+          {t("history")}
         </Text>
         {history.length > 0 && (
           <TouchableOpacity onPress={handleClearAll}>
-            <Text style={[styles.clearText, { fontFamily: getFont('medium', isThai) }]}>
-              {t('clearAll')}
+            <Text
+              style={[
+                styles.clearText,
+                { fontFamily: getFont("medium", isThai) },
+              ]}
+            >
+              {t("clearAll")}
             </Text>
           </TouchableOpacity>
         )}
@@ -170,16 +224,28 @@ export function HistoryScreen() {
       {/* Content */}
       {loading ? (
         <View style={styles.center}>
-          <Text style={{ fontFamily: getFont('regular', isThai) }}>{t('loading')}</Text>
+          <Text style={{ fontFamily: getFont("regular", isThai) }}>
+            {t("loading")}
+          </Text>
         </View>
       ) : history.length === 0 ? (
         <View style={styles.center}>
           <Ionicons name="time-outline" size={48} color={Colors.textMuted} />
-          <Text style={[styles.emptyText, { fontFamily: getFont('medium', isThai) }]}>
-            {t('noHistory')}
+          <Text
+            style={[
+              styles.emptyText,
+              { fontFamily: getFont("medium", isThai) },
+            ]}
+          >
+            {t("noHistory")}
           </Text>
-          <Text style={[styles.emptySubtext, { fontFamily: getFont('regular', isThai) }]}>
-            {t('startComparing')}
+          <Text
+            style={[
+              styles.emptySubtext,
+              { fontFamily: getFont("regular", isThai) },
+            ]}
+          >
+            {t("startComparing")}
           </Text>
         </View>
       ) : (
@@ -201,9 +267,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.md,
@@ -218,8 +284,8 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: Spacing.lg,
   },
   emptyText: {
@@ -236,8 +302,8 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   historyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Colors.card,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
@@ -248,9 +314,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   itemName: {
     fontSize: 16,
@@ -266,8 +332,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   winnerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: Spacing.xs,
   },
   winnerText: {
@@ -280,13 +346,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textMuted,
   },
-  deleteButton: {
-    padding: Spacing.sm,
+  actionButtons: {
+    flexDirection: "row",
+    alignItems: "center",
     marginLeft: Spacing.sm,
   },
+  actionButton: {
+    padding: Spacing.sm,
+    marginLeft: Spacing.xs,
+  },
   editContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   editInput: {
     flex: 1,
@@ -298,7 +369,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   editButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginLeft: Spacing.sm,
   },
   editButton: {
